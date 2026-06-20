@@ -9,7 +9,7 @@ import android.widget.LinearLayout;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
-import net.kdt.pojavlaunch.R;
+import git.artdeell.mojo.R;
 
 public class LauncherPreferenceUIFragment extends PreferenceFragmentCompat {
     @Override
