@@ -17,16 +17,17 @@ jobs:
 
       - name: Rename, Restyle, and Update Package Name
         run: |
-          # 1. Update the app short name to Obsidian Launcher
           find . -name "strings.xml" -exec sed -i 's/<string name="app_short_name">MJLauncher<\/string>/<string name="app_short_name">Obsidian Launcher<\/string>/gI' {} +
           find . -name "strings.xml" -exec sed -i 's/MojoLauncher/Obsidian Launcher/gI' {} +
           find . -name "strings.xml" -exec sed -i 's/PojavLauncher/Obsidian Launcher/gI' {} +
-          
-          # 2. Globally update the package name strings across the source code and configurations
           find . -type f -exec sed -i 's/git.artdeell.mjlaunch/com.obsidian.launcher/g' {} +
           find . -type f -exec sed -i 's/git\.artdeell\.mjlaunch/com\.obsidian\.launcher/g' {} +
-
-          # 3. Force vector background structure for the play button and colors
+          
+          # Force UI colors to pure black (#000000)
+          sed -i 's/<color name="background_app">#181818<\/color>/<color name="background_app">#000000<\/color>/gI' app_pojavlauncher/src/main/res/values/colors.xml
+          sed -i 's/<color name="background_bottom_bar">#232323<\/color>/<color name="background_bottom_bar">#000000<\/color>/gI' app_pojavlauncher/src/main/res/values/colors.xml
+          
+          # Maintain crimson red accent rules
           sed -i 's/#91dffb/#D32F2F/gI' app_pojavlauncher/src/main/res/values/colors.xml
           sed -i 's/#464646/#2A0000/gI' app_pojavlauncher/src/main/res/values/colors.xml
 
