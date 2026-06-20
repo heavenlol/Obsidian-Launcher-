@@ -20,25 +20,32 @@ jobs:
           find . -name "strings.xml" -exec sed -i 's/<string name="app_short_name">MJLauncher<\/string>/<string name="app_short_name">Obsidian Launcher<\/string>/gI' {} +
           find . -name "strings.xml" -exec sed -i 's/MojoLauncher/Obsidian Launcher/gI' {} +
           find . -name "strings.xml" -exec sed -i 's/PojavLauncher/Obsidian Launcher/gI' {} +
+          find . -name "strings.xml" -exec sed -i 's/MJLauncher/Obsidian Launcher/gI' {} +
           find . -type f -exec sed -i 's/git.artdeell.mjlaunch/com.obsidian.launcher/g' {} +
           find . -type f -exec sed -i 's/git\.artdeell\.mjlaunch/com\.obsidian\.launcher/g' {} +
           
-          # Redirect Discord button link to your community invite
           find . -name "strings.xml" -exec sed -i 's/https:\/\/discord.gg\/VHdwQFsaGX/https:\/\/discord.gg\/fvXrtb9kja/g' {} +
           
-          # Force UI background colors to pure black (#000000)
           sed -i 's/<color name="background_app">#181818<\/color>/<color name="background_app">#000000<\/color>/gI' app_pojavlauncher/src/main/res/values/colors.xml
           sed -i 's/<color name="background_bottom_bar">#232323<\/color>/<color name="background_bottom_bar">#000000<\/color>/gI' app_pojavlauncher/src/main/res/values/colors.xml
           sed -i 's/<color name="background_status_bar">#242424<\/color>/<color name="background_status_bar">#000000<\/color>/gI' app_pojavlauncher/src/main/res/values/colors.xml
           
-          # Maintain crimson red accent rules
           sed -i 's/#91dffb/#D32F2F/gI' app_pojavlauncher/src/main/res/values/colors.xml
           sed -i 's/#464646/#2A0000/gI' app_pojavlauncher/src/main/res/values/colors.xml
 
-          # Automatically overwrite the default cyan MJ instance icon with your custom launcher icon
-          rm -f app_pojavlauncher/src/main/res/drawable/ic_mojo_full.webp
-          cp app_pojavlauncher/src/main/res/mipmap-xxhdpi/ic_launcher.png app_pojavlauncher/src/main/res/drawable/ic_mojo_full.png
-          find app_pojavlauncher/src/main/ -type f -name "InstanceIconProvider.java" -exec sed -i 's/R.drawable.ic_mojo_full/R.drawable.ic_mojo_full/g' {} +
+          find app_pojavlauncher/src/main/res/ -name "ic_mojo_full.webp" -delete
+          
+          for dir in app_pojavlauncher/src/main/res/mipmap-*; do
+            res_type=$(basename "$dir")
+            if [ -f "app_pojavlauncher/src/main/res/$res_type/ic_launcher.png" ]; then
+              cp "app_pojavlauncher/src/main/res/$res_type/ic_launcher.png" "app_pojavlauncher/src/main/res/drawable/ic_mojo_full.png"
+              break
+            fi
+          done
+          
+          if [ ! -f "app_pojavlauncher/src/main/res/drawable/ic_mojo_full.png" ]; then
+            cp app_pojavlauncher/src/main/res/mipmap-hdpi/ic_launcher.png app_pojavlauncher/src/main/res/drawable/ic_mojo_full.png || true
+          fi
 
       - name: Get LTW
         uses: dawidd6/action-download-artifact@v6
@@ -73,16 +80,3 @@ jobs:
         with:
           name: ObsidianLauncher-debug
           path: out/ObsidianLauncher-debug.apk
-
-      - name: Send Discord Notification
-        uses: rjstone/discord-webhook-notify@v1
-        if: success()
-        with:
-          severity: info
-          username: Obsidian Builder
-          color: '#D32F2F'
-          avatarUrl: https://github.com/com.obsidian.launcher/raw/main/app_pojavlauncher/src/main/res/mipmap-xxhdpi/ic_launcher.png
-          title: '✅ Obsidian Launcher Build Success!'
-          description: 'A new debug APK compilation has finished successfully.'
-          details: 'Branch: ${{ github.ref_name }} | Commit: ${{ github.event.head_commit.message }}'
-          webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
