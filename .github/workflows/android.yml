@@ -73,3 +73,16 @@ jobs:
         with:
           name: ObsidianLauncher-debug
           path: out/ObsidianLauncher-debug.apk
+
+      - name: Send Discord Notification
+        uses: rjstone/discord-webhook-notify@v1
+        if: success()
+        with:
+          severity: info
+          username: Obsidian Builder
+          color: '#D32F2F'
+          avatarUrl: https://github.com/com.obsidian.launcher/raw/main/app_pojavlauncher/src/main/res/mipmap-xxhdpi/ic_launcher.png
+          title: '✅ Obsidian Launcher Build Success!'
+          description: 'A new debug APK compilation has finished successfully.'
+          details: 'Branch: ${{ github.ref_name }} | Commit: ${{ github.event.head_commit.message }}'
+          webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
