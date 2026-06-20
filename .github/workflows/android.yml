@@ -17,21 +17,21 @@ jobs:
 
       - name: Rename, Restyle, and Update Package Name
         run: |
-          find . -name "strings.xml" -exec sed -i 's/<string name="app_short_name">MJLauncher<\/string>/<string name="app_short_name">Obsidian Launcher<\/string>/gI' {} +
-          find . -name "strings.xml" -exec sed -i 's/MojoLauncher/Obsidian Launcher/gI' {} +
-          find . -name "strings.xml" -exec sed -i 's/PojavLauncher/Obsidian Launcher/gI' {} +
-          find . -name "strings.xml" -exec sed -i 's/MJLauncher/Obsidian Launcher/gI' {} +
-          find . -type f -exec sed -i 's/git.artdeell.mjlaunch/com.obsidian.launcher/g' {} +
-          find . -type f -exec sed -i 's/git\.artdeell\.mjlaunch/com\.obsidian\.launcher/g' {} +
+          find . -name "strings.xml" -exec sed -i 's|<string name="app_short_name">MJLauncher</string>|<string name="app_short_name">Obsidian Launcher</string>|gI' {} +
+          find . -name "strings.xml" -exec sed -i 's|MojoLauncher|Obsidian Launcher|gI' {} +
+          find . -name "strings.xml" -exec sed -i 's|PojavLauncher|Obsidian Launcher|gI' {} +
+          find . -name "strings.xml" -exec sed -i 's|MJLauncher|Obsidian Launcher|gI' {} +
+          find . -type f -exec sed -i 's|git.artdeell.mjlaunch|com.obsidian.launcher|g' {} +
+          find . -type f -exec sed -i 's|git\.artdeell\.mjlaunch|com\.obsidian\.launcher|g' {} +
           
-          find . -name "strings.xml" -exec sed -i 's/https:\/\/discord.gg\/VHdwQFsaGX/https:\/\/discord.gg\/fvXrtb9kja/g' {} +
+          find . -name "strings.xml" -exec sed -i 's|https://discord.gg/VHdwQFsaGX|https://discord.gg/fvXrtb9kja|g' {} +
           
-          sed -i 's/<color name="background_app">#181818<\/color>/<color name="background_app">#000000<\/color>/gI' app_pojavlauncher/src/main/res/values/colors.xml
-          sed -i 's/<color name="background_bottom_bar">#232323<\/color>/<color name="background_bottom_bar">#000000<\/color>/gI' app_pojavlauncher/src/main/res/values/colors.xml
-          sed -i 's/<color name="background_status_bar">#242424<\/color>/<color name="background_status_bar">#000000<\/color>/gI' app_pojavlauncher/src/main/res/values/colors.xml
+          sed -i 's|<color name="background_app">#181818</color>|<color name="background_app">#000000</color>|gI' app_pojavlauncher/src/main/res/values/colors.xml
+          sed -i 's|<color name="background_bottom_bar">#232323</color>|<color name="background_bottom_bar">#000000</color>|gI' app_pojavlauncher/src/main/res/values/colors.xml
+          sed -i 's|<color name="background_status_bar">#242424</color>|<color name="background_status_bar">#000000</color>|gI' app_pojavlauncher/src/main/res/values/colors.xml
           
-          sed -i 's/#91dffb/#D32F2F/gI' app_pojavlauncher/src/main/res/values/colors.xml
-          sed -i 's/#464646/#2A0000/gI' app_pojavlauncher/src/main/res/values/colors.xml
+          sed -i 's|#91dffb|#D32F2F|gI' app_pojavlauncher/src/main/res/values/colors.xml
+          sed -i 's|#464646|#2A0000|gI' app_pojavlauncher/src/main/res/values/colors.xml
 
           find app_pojavlauncher/src/main/res/ -name "ic_mojo_full.webp" -delete
           
