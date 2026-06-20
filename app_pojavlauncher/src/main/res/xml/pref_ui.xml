@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <SwitchPreferenceCompat
+        android:key="ui_customization_enabled"
+        android:title="Enable UI Customization"
+        android:summary="Enable custom colors for buttons and application backgrounds"
+        android:defaultValue="false" />
+
+    <PreferenceCategory
+        android:title="Color Customization Options"
+        android:dependency="ui_customization_enabled">
+        
+        <Preference
+            android:key="ui_color_background"
+            android:title="Background Color"
+            android:summary="Select custom hex canvas color" />
+            
+        <Preference
+            android:key="ui_color_button"
+            android:title="Button Color"
+            android:summary="Select custom interactive component color" />
+    </PreferenceCategory>
+</PreferenceScreen>

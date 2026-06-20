@@ -71,4 +71,5 @@
 
 
 
+    <Preference android:key="ui_settings" android:title="UI Customization" android:fragment="net.kdt.pojavlaunch.prefs.screens.LauncherPreferenceUIFragment" />
 </PreferenceScreen>
