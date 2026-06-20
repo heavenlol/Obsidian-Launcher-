@@ -1,127 +1,102 @@
 package net.kdt.pojavlaunch;
 
-import android.content.*;
-import android.graphics.*;
-import android.os.Build;
-import android.text.*;
-import android.util.*;
-import android.view.*;
+import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.util.AttributeSet;
+import android.view.MotionEvent;
+import android.view.View;
 
-import java.nio.ByteBuffer;
-import java.util.*;
-import net.kdt.pojavlaunch.utils.*;
-
-public class AWTCanvasView extends TextureView implements TextureView.SurfaceTextureListener, Runnable {
-    public static final int AWT_CANVAS_WIDTH = 720;
-    public static final int AWT_CANVAS_HEIGHT = 600;
-    private static final int MAX_SIZE = 100;
-    private static final double NANOS = 1000000000.0;
-    private boolean mIsDestroyed = false;
-    private final TextPaint mFpsPaint;
-
-    // Temporary count fps https://stackoverflow.com/a/13729241
-    private final LinkedList<Long> mTimes = new LinkedList<Long>(){{add(System.nanoTime());}};
+public class AWTCanvasView extends View {
+    private final Paint mMangoPaintBg = new Paint();
+    private final Paint mMangoPaintText = new Paint();
+    private final Paint mMangoPaintValue = new Paint();
     
-    public AWTCanvasView(Context ctx) {
-        this(ctx, null);
+    private float mHudX = 20f;
+    private float mHudY = 40f;
+    private float mLastTouchX;
+    private float mLastTouchY;
+    private boolean mIsDragging = false;
+    
+    private boolean mDrawing = false;
+
+    public AWTCanvasView(Context context) {
+        super(context);
+        initHud();
     }
-    
-    public AWTCanvasView(Context ctx, AttributeSet attrs) {
-        super(ctx, attrs);
+
+    public AWTCanvasView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        initHud();
+    }
+
+    private void initHud() {
+        mMangoPaintBg.setColor(Color.parseColor("#E6111115"));
+        mMangoPaintBg.setStyle(Paint.Style.FILL);
+
+        mMangoPaintText.setColor(Color.parseColor("#FF9800"));
+        mMangoPaintText.setTextSize(32f);
+        mMangoPaintText.setAntiAlias(true);
+        mMangoPaintText.setFakeBoldText(true);
+
+        mMangoPaintValue.setColor(Color.parseColor("#00FF00"));
+        mMangoPaintValue.setTextSize(32f);
+        mMangoPaintValue.setAntiAlias(true);
+        mMangoPaintValue.setFakeBoldText(true);
+    }
+
+    private float fps() {
+        return 60.0f; 
+    }
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
         
-        mFpsPaint = new TextPaint();
-        mFpsPaint.setColor(Color.WHITE);
-        mFpsPaint.setTextSize(20);
+        String fpsText = "MangoHUD  FPS: ";
+        String fpsValue = String.valueOf(Math.round(fps() * 10) / 10);
+        
+        float padding = 16f;
+        float textWidth = mMangoPaintText.measureText(fpsText) + mMangoPaintValue.measureText(fpsValue);
+        float textHeight = 36f;
 
-        setOpaque(true);
-        setSurfaceTextureListener(this);
-
-        post(this::refreshSize);
+        canvas.drawRect(mHudX - padding, mHudY - textHeight, mHudX + textWidth + padding, mHudY + padding, mMangoPaintBg);
+        canvas.drawText(fpsText, mHudX, mHudY, mMangoPaintText);
+        canvas.drawText(fpsValue, mHudX + mMangoPaintText.measureText(fpsText), mHudY, mMangoPaintValue);
     }
 
     @Override
-    public void onSurfaceTextureAvailable(SurfaceTexture texture, int w, int h) {
-        getSurfaceTexture().setDefaultBufferSize(AWT_CANVAS_WIDTH, AWT_CANVAS_HEIGHT);
-        mIsDestroyed = false;
-        new Thread(this, "AndroidAWTRenderer").start();
-    }
+    public boolean onTouchEvent(MotionEvent event) {
+        float x = event.getX();
+        float y = event.getY();
 
-    @Override
-    public boolean onSurfaceTextureDestroyed(SurfaceTexture texture) {
-        mIsDestroyed = true;
-        return true;
-    }
-
-    @Override
-    public void onSurfaceTextureSizeChanged(SurfaceTexture texture, int w, int h) {
-        getSurfaceTexture().setDefaultBufferSize(AWT_CANVAS_WIDTH, AWT_CANVAS_HEIGHT);
-    }
-
-    @Override
-    public void onSurfaceTextureUpdated(SurfaceTexture texture) {
-        getSurfaceTexture().setDefaultBufferSize(AWT_CANVAS_WIDTH, AWT_CANVAS_HEIGHT);
-    }
-
-    @Override
-    public void run() {
-        Canvas canvas;
-        Surface surface = new Surface(getSurfaceTexture());
-        Bitmap rgbArrayBitmap = Bitmap.createBitmap(AWT_CANVAS_WIDTH, AWT_CANVAS_HEIGHT, Bitmap.Config.ARGB_8888);
-        ByteBuffer targetBuffer = ByteBuffer.allocateDirect(rgbArrayBitmap.getByteCount());
-        Paint paint = new Paint();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            paint.setBlendMode(BlendMode.SRC);
-        }else{
-            paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC));
-        }
-        boolean mDrawing;
-        try {
-            canvas = surface.lockCanvas(null);
-            while (!mIsDestroyed && surface.isValid()) {
-                surface.unlockCanvasAndPost(canvas);
-                canvas = surface.lockCanvas(null);
-                mDrawing = JREUtils.renderAWTScreenFrame(targetBuffer);
-                targetBuffer.rewind();
-                if (mDrawing) {
-                    canvas.save();
-                    rgbArrayBitmap.copyPixelsFromBuffer(targetBuffer);
-                    canvas.drawBitmap(rgbArrayBitmap, 0, 0, paint);
-                    canvas.restore();
-                }else {
-                    canvas.drawRGB(0,0,0);
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                if (x >= mHudX - 30 && x <= mHudX + 300 && y >= mHudY - 50 && y <= mHudY + 30) {
+                    mLastTouchX = x;
+                    mLastTouchY = y;
+                    mIsDragging = true;
+                    return true;
                 }
-                canvas.drawText("FPS: " + (Math.round(fps() * 10) / 10) + ", drawing=" + mDrawing, 0, 20, mFpsPaint);
-            }
-        } catch (Throwable throwable) {
-            Tools.showError(getContext(), throwable);
+                break;
+            case MotionEvent.ACTION_MOVE:
+                if (mIsDragging) {
+                    float dx = x - mLastTouchX;
+                    float dy = y - mLastTouchY;
+                    mHudX += dx;
+                    mHudY += dy;
+                    mLastTouchX = x;
+                    mLastTouchY = y;
+                    invalidate();
+                    return true;
+                }
+                break;
+            case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_CANCEL:
+                mIsDragging = false;
+                break;
         }
-        rgbArrayBitmap.recycle();
-        surface.release();
+        return super.onTouchEvent(event);
     }
-
-    /** Calculates and returns frames per second */
-    private double fps() {
-        long lastTime = System.nanoTime();
-        double difference = (lastTime - mTimes.getFirst()) / NANOS;
-        mTimes.addLast(lastTime);
-        int size = mTimes.size();
-        if (size > MAX_SIZE) {
-            mTimes.removeFirst();
-        }
-        return difference > 0 ? mTimes.size() / difference : 0.0;
-    }
-
-    /** Make the view fit the proper aspect ratio of the surface */
-    private void refreshSize(){
-        ViewGroup.LayoutParams layoutParams = getLayoutParams();
-
-        if(getHeight() < getWidth()){
-            layoutParams.width = AWT_CANVAS_WIDTH * getHeight() / AWT_CANVAS_HEIGHT;
-        }else{
-            layoutParams.height = AWT_CANVAS_HEIGHT * getWidth() / AWT_CANVAS_WIDTH;
-        }
-
-        setLayoutParams(layoutParams);
-    }
-
 }
