@@ -23,6 +23,9 @@ jobs:
           find . -type f -exec sed -i 's/git.artdeell.mjlaunch/com.obsidian.launcher/g' {} +
           find . -type f -exec sed -i 's/git\.artdeell\.mjlaunch/com\.obsidian\.launcher/g' {} +
           
+          # Redirect Discord button link to your community invite
+          find . -name "strings.xml" -exec sed -i 's/https:\/\/discord.gg\/VHdwQFsaGX/https:\/\/discord.gg\/fvXrtb9kja/g' {} +
+          
           # Force UI background colors to pure black (#000000)
           sed -i 's/<color name="background_app">#181818<\/color>/<color name="background_app">#000000<\/color>/gI' app_pojavlauncher/src/main/res/values/colors.xml
           sed -i 's/<color name="background_bottom_bar">#232323<\/color>/<color name="background_bottom_bar">#000000<\/color>/gI' app_pojavlauncher/src/main/res/values/colors.xml
@@ -35,8 +38,6 @@ jobs:
           # Automatically overwrite the default cyan MJ instance icon with your custom launcher icon
           rm -f app_pojavlauncher/src/main/res/drawable/ic_mojo_full.webp
           cp app_pojavlauncher/src/main/res/mipmap-xxhdpi/ic_launcher.png app_pojavlauncher/src/main/res/drawable/ic_mojo_full.png
-          
-          # Update references from webp to png inside the resource definition map if applicable
           find app_pojavlauncher/src/main/ -type f -name "InstanceIconProvider.java" -exec sed -i 's/R.drawable.ic_mojo_full/R.drawable.ic_mojo_full/g' {} +
 
       - name: Get LTW
