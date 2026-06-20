@@ -1,6 +1,7 @@
 package net.kdt.pojavlaunch.fragments;
 
 import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,8 +11,6 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.preference.PreferenceManager;
 import git.artdeell.mojo.R;
-import com.kdt.mcgui.LauncherMenuButton;
-import com.kdt.mcgui.MineButton;
 
 public class LauncherFragment extends Fragment {
 
@@ -59,7 +58,11 @@ public class LauncherFragment extends Fragment {
                 for (int id : buttonIds) {
                     View btn = view.findViewById(id);
                     if (btn != null) {
-                        btn.setBackgroundColor(buttonColor);
+                        if (btn.getBackground() != null) {
+                            btn.getBackground().setColorFilter(buttonColor, PorterDuff.Mode.SRC_ATOP);
+                        } else {
+                            btn.setBackgroundColor(buttonColor);
+                        }
                     }
                 }
             } catch (Exception ignored) {}
