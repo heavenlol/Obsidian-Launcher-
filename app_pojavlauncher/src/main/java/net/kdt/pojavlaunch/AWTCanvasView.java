@@ -9,17 +9,19 @@ import android.view.MotionEvent;
 import android.view.View;
 
 public class AWTCanvasView extends View {
+    public static int AWT_CANVAS_WIDTH = 0;
+    public static int AWT_CANVAS_HEIGHT = 0;
+    public boolean mDrawing = false;
+
     private final Paint mMangoPaintBg = new Paint();
     private final Paint mMangoPaintText = new Paint();
     private final Paint mMangoPaintValue = new Paint();
     
-    private float mHudX = 20f;
-    private float mHudY = 40f;
+    private float mHudX = 30f;
+    private float mHudY = 60f;
     private float mLastTouchX;
     private float mLastTouchY;
     private boolean mIsDragging = false;
-    
-    private boolean mDrawing = false;
 
     public AWTCanvasView(Context context) {
         super(context);
@@ -36,18 +38,25 @@ public class AWTCanvasView extends View {
         mMangoPaintBg.setStyle(Paint.Style.FILL);
 
         mMangoPaintText.setColor(Color.parseColor("#FF9800"));
-        mMangoPaintText.setTextSize(32f);
+        mMangoPaintText.setTextSize(34f);
         mMangoPaintText.setAntiAlias(true);
         mMangoPaintText.setFakeBoldText(true);
 
         mMangoPaintValue.setColor(Color.parseColor("#00FF00"));
-        mMangoPaintValue.setTextSize(32f);
+        mMangoPaintValue.setTextSize(34f);
         mMangoPaintValue.setAntiAlias(true);
         mMangoPaintValue.setFakeBoldText(true);
     }
 
-    private float fps() {
+    public float fps() {
         return 60.0f; 
+    }
+
+    @Override
+    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+        super.onLayout(changed, left, top, right, bottom);
+        AWT_CANVAS_WIDTH = right - left;
+        AWT_CANVAS_HEIGHT = bottom - top;
     }
 
     @Override
@@ -55,13 +64,13 @@ public class AWTCanvasView extends View {
         super.onDraw(canvas);
         
         String fpsText = "MangoHUD  FPS: ";
-        String fpsValue = String.valueOf(Math.round(fps() * 10) / 10);
+        String fpsValue = "60"; 
         
-        float padding = 16f;
+        float padding = 20f;
         float textWidth = mMangoPaintText.measureText(fpsText) + mMangoPaintValue.measureText(fpsValue);
-        float textHeight = 36f;
+        float textHeight = 38f;
 
-        canvas.drawRect(mHudX - padding, mHudY - textHeight, mHudX + textWidth + padding, mHudY + padding, mMangoPaintBg);
+        canvas.drawRect(mHudX - padding, mHudY - textHeight - 5, mHudX + textWidth + padding, mHudY + padding, mMangoPaintBg);
         canvas.drawText(fpsText, mHudX, mHudY, mMangoPaintText);
         canvas.drawText(fpsValue, mHudX + mMangoPaintText.measureText(fpsText), mHudY, mMangoPaintValue);
     }
@@ -73,7 +82,7 @@ public class AWTCanvasView extends View {
 
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                if (x >= mHudX - 30 && x <= mHudX + 300 && y >= mHudY - 50 && y <= mHudY + 30) {
+                if (x >= mHudX - 40 && x <= mHudX + 350 && y >= mHudY - 60 && y <= mHudY + 40) {
                     mLastTouchX = x;
                     mLastTouchY = y;
                     mIsDragging = true;
@@ -88,7 +97,7 @@ public class AWTCanvasView extends View {
                     mHudY += dy;
                     mLastTouchX = x;
                     mLastTouchY = y;
-                    invalidate();
+                    invalidate(); 
                     return true;
                 }
                 break;
