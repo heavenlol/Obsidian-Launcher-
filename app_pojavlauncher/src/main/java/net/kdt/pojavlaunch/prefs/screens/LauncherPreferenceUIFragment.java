@@ -4,8 +4,11 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
@@ -18,6 +21,12 @@ public class LauncherPreferenceUIFragment extends PreferenceFragmentCompat {
 
         setupColorPreference("ui_color_background", "#000000");
         setupColorPreference("ui_color_button", "#D32F2F");
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        view.setBackgroundColor(Color.BLACK);
     }
 
     private void setupColorPreference(final String key, final String defaultHex) {
