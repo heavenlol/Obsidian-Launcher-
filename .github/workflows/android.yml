@@ -9,15 +9,20 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
-    env:
-      UPLOAD_KEYSTORE_PASSWORD: ${{ secrets.UPLOAD_NEXT_KEYSTORE_PASSWORD }}
-      MOJOPUB_KEYSTORE_PASSWORD: ${{ secrets.RELEASE_NEXT_KEYSTORE_PASSWORD }}
-      CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         with:
           submodules: true
+
+      - name: Rename and Restyle Launcher to Obsidian Launcher
+        run: |
+          find . -name "strings.xml" -exec sed -i 's/MojoLauncher/Obsidian Launcher/g' {} +
+          find . -name "strings.xml" -exec sed -i 's/PojavLauncher/Obsidian Launcher/g' {} +
+          find . -name "AndroidManifest.xml" -exec sed -i 's/android:label="MojoLauncher"/android:label="Obsidian Launcher"/g' {} +
+          find . -name "AndroidManifest.xml" -exec sed -i 's/android:label="PojavLauncher"/android:label="Obsidian Launcher"/g' {} +
+          sed -i 's/#91dffb/#D32F2F/gI' app_pojavlauncher/src/main/res/values/colors.xml
+          sed -i 's/#464646/#2A0000/gI' app_pojavlauncher/src/main/res/values/colors.xml
 
       - name: Get LTW
         uses: dawidd6/action-download-artifact@v6
@@ -38,72 +43,17 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
+          
       - name: Create out directory
         run: mkdir out
-      - name: Build Publishing .aab
-        if: github.repository_owner == 'MojoLauncher' && github.ref_name == 'v3_openjdk'
-        run: |
-          gradle :app_pojavlauncher:bundleFullGplay
-          mv app_pojavlauncher/build/outputs/bundle/fullGplay/app_pojavlauncher-full-gplay.aab out/app-gplay.aab
 
       - name: Build Debug .apk
         run: |
-          # Build the launcher
           gradle :app_pojavlauncher:assembleFullDebug
-          mv app_pojavlauncher/build/outputs/apk/full/debug/app_pojavlauncher-full-debug.apk out/app-debug-full.apk
-
-      - name: Build Debug .apk (No runtime)
-        run: |
-          gradle :app_pojavlauncher:assembleNoruntimeDebug
-          mv app_pojavlauncher/build/outputs/apk/noruntime/debug/app_pojavlauncher-noruntime-debug.apk out/app-debug-noruntime.apk
-      - name: Build Nightly Release .apk
-        if: github.repository_owner == 'MojoLauncher' && github.ref_name == 'v3_openjdk'
-        run: |
-          gradle :app_pojavlauncher:assembleFullPubRelease
-          mv app_pojavlauncher/build/outputs/apk/full/pubRelease/app_pojavlauncher-full-pubRelease.apk out/MojoLauncher-release.apk
-      - name: Gen md5sums
-        run: |
-          md5sum out/app-debug-full.apk > out/app-debug-full.md5
-          md5sum out/app-debug-noruntime.apk > out/app-debug-noruntime.md5
+          mv app_pojavlauncher/build/outputs/apk/full/debug/app_pojavlauncher-full-debug.apk out/ObsidianLauncher-debug.apk
 
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug
-          path: out/app-debug-full.apk
-
-      - name: Upload Debug APK (No runtime)
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-debug-noruntime
-          path: out/app-debug-noruntime.apk
-
-      - name: Release Nightly APK
-        if: github.repository_owner == 'MojoLauncher' && github.ref_name == 'v3_openjdk'
-        uses: softprops/action-gh-release@v3
-        with:
-          name: MojoLauncher Nightly Builds
-          prerelease: true
-          tag_name: nightly
-          body: |
-            MojoLauncher nightly build.
-            Commit hash: ${{ github.sha }}
-          files: |
-            out/MojoLauncher-release.apk
-
-      - name: Upload AAB
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-release-aab
-          path: out/app-gplay.aab
-
-      - name: Upload onto the Google Play testing track
-        continue-on-error: true
-        if: github.repository_owner == 'MojoLauncher' && github.ref_name == 'v3_openjdk'
-        uses: r0adkll/upload-google-play@v1.1.2
-        with:
-          serviceAccountJsonPlainText: ${{ secrets.SERVICE_JSON }}
-          packageName: git.artdeell.mojo
-          releaseFiles: out/app-gplay.aab
-          track: internal
-          inAppUpdatePriority: 5
+          name: ObsidianLauncher-debug
+          path: out/ObsidianLauncher-debug.apk
