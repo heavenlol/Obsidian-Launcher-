@@ -15,12 +15,18 @@ jobs:
         with:
           submodules: true
 
-      - name: Rename and Restyle Launcher to Obsidian Launcher
+      - name: Rename, Restyle, and Update Package Name
         run: |
-          find . -name "strings.xml" -exec sed -i 's/MojoLauncher/Obsidian Launcher/g' {} +
-          find . -name "strings.xml" -exec sed -i 's/PojavLauncher/Obsidian Launcher/g' {} +
-          find . -name "AndroidManifest.xml" -exec sed -i 's/android:label="MojoLauncher"/android:label="Obsidian Launcher"/g' {} +
-          find . -name "AndroidManifest.xml" -exec sed -i 's/android:label="PojavLauncher"/android:label="Obsidian Launcher"/g' {} +
+          # 1. Update the app short name to Obsidian Launcher
+          find . -name "strings.xml" -exec sed -i 's/<string name="app_short_name">MJLauncher<\/string>/<string name="app_short_name">Obsidian Launcher<\/string>/gI' {} +
+          find . -name "strings.xml" -exec sed -i 's/MojoLauncher/Obsidian Launcher/gI' {} +
+          find . -name "strings.xml" -exec sed -i 's/PojavLauncher/Obsidian Launcher/gI' {} +
+          
+          # 2. Globally update the package name strings across the source code and configurations
+          find . -type f -exec sed -i 's/git.artdeell.mjlaunch/com.obsidian.launcher/g' {} +
+          find . -type f -exec sed -i 's/git\.artdeell\.mjlaunch/com\.obsidian\.launcher/g' {} +
+
+          # 3. Force vector background structure for the play button and colors
           sed -i 's/#91dffb/#D32F2F/gI' app_pojavlauncher/src/main/res/values/colors.xml
           sed -i 's/#464646/#2A0000/gI' app_pojavlauncher/src/main/res/values/colors.xml
 
