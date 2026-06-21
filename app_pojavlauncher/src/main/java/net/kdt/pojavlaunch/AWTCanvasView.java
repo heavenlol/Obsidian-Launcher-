@@ -27,6 +27,7 @@ public class AWTCanvasView extends TextureView implements TextureView.SurfaceTex
     private float mLastTouchX;
     private float mLastTouchY;
     private boolean mIsDragging = false;
+    private String mCurrentFpsString = "0.0";
 
     private final LinkedList<Long> mTimes = new LinkedList<Long>(){{add(System.nanoTime());}};
     
@@ -61,6 +62,10 @@ public class AWTCanvasView extends TextureView implements TextureView.SurfaceTex
         setSurfaceTextureListener(this);
 
         post(this::refreshSize);
+    }
+
+    public String getCurrentFps() {
+        return mCurrentFpsString;
     }
 
     @Override
@@ -115,16 +120,7 @@ public class AWTCanvasView extends TextureView implements TextureView.SurfaceTex
                     canvas.drawRGB(0,0,0);
                 }
 
-                String currentFps = String.valueOf(Math.round(fps() * 10) / 10);
-                String labelStr = "MangoHUD  FPS: ";
-                
-                float textPadding = 12f;
-                float measuredWidth = mMangoPaintText.measureText(labelStr) + mMangoPaintValue.measureText(currentFps);
-                float boxHeight = 26f;
-
-                canvas.drawRect(mHudX - textPadding, mHudY - boxHeight, mHudX + measuredWidth + textPadding, mHudY + textPadding, mMangoPaintBg);
-                canvas.drawText(labelStr, mHudX, mHudY, mMangoPaintText);
-                canvas.drawText(currentFps, mHudX + mMangoPaintText.measureText(labelStr), mHudY, mMangoPaintValue);
+                mCurrentFpsString = String.valueOf(Math.round(fps() * 10) / 10);
             }
         } catch (Throwable throwable) {
             Tools.showError(getContext(), throwable);
