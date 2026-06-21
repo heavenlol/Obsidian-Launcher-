@@ -3,15 +3,23 @@ package net.kdt.pojavlaunch;
 import android.annotation.SuppressLint;
 import android.content.ClipData;
 import android.content.ClipboardManager;
+import android.content.Context;
+import android.graphics.Color;
+import android.graphics.PixelFormat;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.GestureDetector;
+import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
@@ -59,6 +67,11 @@ public class JavaGUILauncherActivity extends BaseActivity implements View.OnTouc
 
     private boolean mIsVirtualMouseEnabled;
     private boolean mIsTrusted;
+
+    private WindowManager mWindowManager;
+    private FrameLayout mOverlayContainer;
+    private WindowManager.LayoutParams mWindowParams;
+    private TextView mFpsTextView;
     
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -104,10 +117,6 @@ public class JavaGUILauncherActivity extends BaseActivity implements View.OnTouc
             float prevX = 0, prevY = 0;
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                // MotionEvent reports input details from the touch screen
-                // and other input controls. In this case, you are only
-                // interested in events where the touch position changed.
-                // int index = event.getActionIndex();
                 int action = event.getActionMasked();
 
                 float x = event.getX();
@@ -121,7 +130,7 @@ public class JavaGUILauncherActivity extends BaseActivity implements View.OnTouc
                     sendScaledMousePosition(mouseX,mouseY);
                     AWTInputBridge.sendMousePress(AWTInputEvent.BUTTON1_DOWN_MASK);
                 } else {
-                    if (action == MotionEvent.ACTION_MOVE) { // 2
+                    if (action == MotionEvent.ACTION_MOVE) {
                         mouseX = Math.max(0, Math.min(v.getWidth(), mouseX + x - prevX));
                         mouseY = Math.max(0, Math.min(v.getHeight(), mouseY + y - prevY));
                         placeMouseAt(mouseX, mouseY);
@@ -145,11 +154,11 @@ public class JavaGUILauncherActivity extends BaseActivity implements View.OnTouc
             }
 
             switch (event.getActionMasked()) {
-                case MotionEvent.ACTION_UP: // 1
-                case MotionEvent.ACTION_CANCEL: // 3
-                case MotionEvent.ACTION_POINTER_UP: // 6
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_CANCEL:
+                case MotionEvent.ACTION_POINTER_UP:
                     break;
-                case MotionEvent.ACTION_MOVE: // 2
+                case MotionEvent.ACTION_MOVE:
                     sendScaledMousePosition(x + mTextureView.getX(), y);
                     break;
             }
@@ -177,13 +186,76 @@ public class JavaGUILauncherActivity extends BaseActivity implements View.OnTouc
             Tools.showError(this, th, true);
         }
 
-
         getOnBackPressedDispatcher().addCallback(new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
                 Tools.dialogForceClose(JavaGUILauncherActivity.this);
             }
         });
+
+        setupMangoHudOverlay();
+    }
+
+    private void setupMangoHudOverlay() {
+        mWindowManager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
+
+        int layoutFlag;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            layoutFlag = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
+        } else {
+            layoutFlag = WindowManager.LayoutParams.TYPE_PHONE;
+        }
+
+        mWindowParams = new WindowManager.LayoutParams(
+                WindowManager.LayoutParams.WRAP_CONTENT,
+                WindowManager.LayoutParams.WRAP_CONTENT,
+                layoutFlag,
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+                PixelFormat.TRANSLUCENT
+        );
+
+        mWindowParams.gravity = Gravity.TOP | Gravity.LEFT;
+        mWindowParams.x = 50;
+        mWindowParams.y = 120;
+
+        mOverlayContainer = new FrameLayout(this);
+        mOverlayContainer.setBackgroundColor(Color.parseColor("#E6111115"));
+        mOverlayContainer.setPadding(20, 10, 20, 10);
+
+        mFpsTextView = new TextView(this);
+        mFpsTextView.setText("MangoHUD  FPS: 60");
+        mFpsTextView.setTextColor(Color.parseColor("#FF9800"));
+        mFpsTextView.setTextSize(14f);
+        mFpsTextView.setFakeBoldText(true);
+
+        mOverlayContainer.addView(mFpsTextView);
+
+        mOverlayContainer.setOnTouchListener(new View.OnTouchListener() {
+            private int initialX;
+            private int initialY;
+            private float initialTouchX;
+            private float initialTouchY;
+
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        initialX = mWindowParams.x;
+                        initialY = mWindowParams.y;
+                        initialTouchX = event.getRawX();
+                        initialTouchY = event.getRawY();
+                        return true;
+                    case MotionEvent.ACTION_MOVE:
+                        mWindowParams.x = initialX + (int) (event.getRawX() - initialTouchX);
+                        mWindowParams.y = initialY + (int) (event.getRawY() - initialTouchY);
+                        mWindowManager.updateViewLayout(mOverlayContainer, mWindowParams);
+                        return true;
+                }
+                return false;
+            }
+        });
+
+        mWindowManager.addView(mOverlayContainer, mWindowParams);
     }
 
     private void startModInstallerWithUri(Uri uri, List<String> javaArgs) {
@@ -278,20 +350,18 @@ public class JavaGUILauncherActivity extends BaseActivity implements View.OnTouc
         decorView.setSystemUiVisibility(uiOptions);
     }
 
-
-
     @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouch(View v, MotionEvent e) {
         boolean isDown;
         switch (e.getActionMasked()) {
-            case MotionEvent.ACTION_DOWN: // 0
-            case MotionEvent.ACTION_POINTER_DOWN: // 5
+            case MotionEvent.ACTION_DOWN:
+            case MotionEvent.ACTION_POINTER_DOWN:
                 isDown = true;
                 break;
-            case MotionEvent.ACTION_UP: // 1
-            case MotionEvent.ACTION_CANCEL: // 3
-            case MotionEvent.ACTION_POINTER_UP: // 6
+            case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_CANCEL:
+            case MotionEvent.ACTION_POINTER_UP:
                 isDown = false;
                 break;
             default:
@@ -331,7 +401,6 @@ public class JavaGUILauncherActivity extends BaseActivity implements View.OnTouc
 
     @SuppressWarnings("SuspiciousNameCombination")
     void sendScaledMousePosition(float x, float y){
-        // Clamp positions to the borders of the usable view, then scale them
         x = androidx.core.math.MathUtils.clamp(x, mTextureView.getX(), mTextureView.getX() + mTextureView.getWidth());
         y = androidx.core.math.MathUtils.clamp(y, mTextureView.getY(), mTextureView.getY() + mTextureView.getHeight());
 
@@ -421,10 +490,9 @@ public class JavaGUILauncherActivity extends BaseActivity implements View.OnTouc
         return classVersionToJavaVersion(majorVersion);
     }
     public static int classVersionToJavaVersion(int majorVersion) {
-        if(majorVersion < 46) return 2; // there isn't even an arm64 port of jre 1.1 (or anything before 1.8 in fact)
+        if(majorVersion < 46) return 2;
         return majorVersion - 44;
     }
-
 
     @Keep
     public static void querySystemClipboard() {
@@ -435,7 +503,6 @@ public class JavaGUILauncherActivity extends BaseActivity implements View.OnTouc
                 return;
             }
             ClipData.Item firstClipItem = clipData.getItemAt(0);
-            //TODO: coerce to HTML if the clip item is styled
             CharSequence clipItemText = firstClipItem.getText();
             if(clipItemText == null) {
                 AWTInputBridge.nativeClipboardReceived(null, null);
@@ -458,5 +525,13 @@ public class JavaGUILauncherActivity extends BaseActivity implements View.OnTouc
             }
             if(clipData != null) CLIPBOARD.setPrimaryClip(clipData);
         });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mWindowManager != null && mOverlayContainer != null) {
+            mWindowManager.removeView(mOverlayContainer);
+        }
     }
 }
