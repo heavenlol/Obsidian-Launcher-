@@ -6,6 +6,7 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -226,7 +227,7 @@ public class JavaGUILauncherActivity extends BaseActivity implements View.OnTouc
         mFpsTextView.setText("MangoHUD  FPS: 60");
         mFpsTextView.setTextColor(Color.parseColor("#FF9800"));
         mFpsTextView.setTextSize(14f);
-        mFpsTextView.setFakeBoldText(true);
+        mFpsTextView.setTypeface(null, Typeface.BOLD);
 
         mOverlayContainer.addView(mFpsTextView);
 
